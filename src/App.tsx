@@ -106,6 +106,22 @@ function App() {
     }
   };
 
+  const handleEditTransaction = async (id: string, price: number, quantity: number) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .update({ price, quantity })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await Promise.all([fetchTransactions(), fetchBalance()]);
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+      alert('Gagal mengubah transaksi');
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -121,6 +137,7 @@ function App() {
               transactions={transactions}
               loading={loadingTransactions}
               onDelete={handleDeleteTransaction}
+              onEdit={handleEditTransaction}
             />
           </div>
         </div>
