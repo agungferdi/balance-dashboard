@@ -21,7 +21,6 @@ interface DailyData {
   date: string;
   fullDate: string;
   expense: number;
-  income: number;
 }
 
 const formatCurrency = (amount: number): string => {
@@ -71,7 +70,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) => {
   const chartData = useMemo(() => {
     // Group transactions by date
-    const dailyMap = new Map<string, { expense: number; income: number }>();
+    const dailyMap = new Map<string, { expense: number }>();
     
     // Get last 14 days
     const today = new Date();
@@ -79,7 +78,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateKey = date.toISOString().split('T')[0];
-      dailyMap.set(dateKey, { expense: 0, income: 0 });
+      dailyMap.set(dateKey, { expense: 0 });
     }
     
     // Aggregate transactions
@@ -89,8 +88,6 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
         const current = dailyMap.get(dateKey)!;
         if (t.type === 'expense') {
           current.expense += t.total;
-        } else {
-          current.income += t.total;
         }
       }
     });
@@ -103,7 +100,6 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
         date: new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(date),
         fullDate: new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date),
         expense: value.expense,
-        income: value.income,
       });
     });
     
@@ -114,13 +110,6 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
     const today = new Date().toISOString().split('T')[0];
     return transactions
       .filter(t => t.type === 'expense' && t.created_at.startsWith(today))
-      .reduce((sum, t) => sum + t.total, 0);
-  }, [transactions]);
-
-  const totalIncomeToday = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
-    return transactions
-      .filter(t => t.type === 'income' && t.created_at.startsWith(today))
       .reduce((sum, t) => sum + t.total, 0);
   }, [transactions]);
 
@@ -145,17 +134,11 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
           <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
             <TrendingUp size={16} className="text-white" />
           </div>
-          <h2 className="text-base font-bold text-white">Grafik 14 Hari</h2>
+          <h2 className="text-base font-bold text-white">Grafik Pengeluaran 14 Hari</h2>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <p className="text-[10px] text-white/50">Hari ini</p>
-            <p className="text-xs font-bold text-rose-300">-{formatFullCurrency(totalExpenseToday)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] text-white/50">Masuk</p>
-            <p className="text-xs font-bold text-emerald-300">+{formatFullCurrency(totalIncomeToday)}</p>
-          </div>
+        <div className="text-right">
+          <p className="text-[10px] text-white/50">Hari ini</p>
+          <p className="text-xs font-bold text-rose-300">-{formatFullCurrency(totalExpenseToday)}</p>
         </div>
       </div>
 
@@ -166,10 +149,6 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
               <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
                 <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
@@ -188,12 +167,6 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
               dx={-5}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              wrapperStyle={{ paddingTop: 10 }}
-              iconType="circle"
-              iconSize={6}
-              formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '10px' }}>{value}</span>}
-            />
             <Area
               type="monotone"
               dataKey="expense"
@@ -204,32 +177,16 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
               dot={{ fill: '#fb7185', strokeWidth: 0, r: 3 }}
               activeDot={{ r: 5, stroke: 'rgba(255,255,255,0.5)', strokeWidth: 2 }}
             />
-            <Area
-              type="monotone"
-              dataKey="income"
-              name="Pemasukan"
-              stroke="#34d399"
-              strokeWidth={2}
-              fill="url(#incomeGradient)"
-              dot={{ fill: '#34d399', strokeWidth: 0, r: 3 }}
-              activeDot={{ r: 5, stroke: 'rgba(255,255,255,0.5)', strokeWidth: 2 }}
-            />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-white/10">
+      <div className="mt-4 pt-4 border-t border-white/10">
         <div className="bg-rose-500/20 rounded-xl p-3">
           <p className="text-[10px] text-rose-300 font-medium mb-1">Total Pengeluaran (14 hari)</p>
           <p className="text-base font-bold text-rose-300">
             {formatFullCurrency(chartData.reduce((sum, d) => sum + d.expense, 0))}
-          </p>
-        </div>
-        <div className="bg-emerald-500/20 rounded-xl p-3">
-          <p className="text-[10px] text-emerald-300 font-medium mb-1">Total Pemasukan (14 hari)</p>
-          <p className="text-base font-bold text-emerald-300">
-            {formatFullCurrency(chartData.reduce((sum, d) => sum + d.income, 0))}
           </p>
         </div>
       </div>
