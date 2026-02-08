@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Trash2, Edit, Utensils, Car, Wrench, Gamepad2, Banknote, MoreHorizontal, Clock, X, Save, Wallet, CreditCard, PiggyBank } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Trash2, Edit, Utensils, Car, Wrench, Gamepad2, Banknote, MoreHorizontal, Clock, X, Save, Wallet, CreditCard, PiggyBank, Search, Filter } from 'lucide-react';
 import { TransactionWithBalance, AccountType } from '../types/transaction';
 import { supabase } from '../lib/supabase';
 
@@ -81,6 +81,41 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
   const [editPrice, setEditPrice] = useState('');
   const [editQuantity, setEditQuantity] = useState('');
   const [accountMap, setAccountMap] = useState<Record<string, AccountType>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(false);
+
+  const ALL_CATEGORIES = [
+    { value: 'all', label: 'Semua' },
+    { value: 'income', label: 'Pemasukan', group: 'type' },
+    { value: 'expense', label: 'Pengeluaran', group: 'type' },
+    { value: 'Foods', label: 'Foods', group: 'expense' },
+    { value: 'Transportation', label: 'Transport', group: 'expense' },
+    { value: 'Equipment', label: 'Equipment', group: 'expense' },
+    { value: 'Entertainment', label: 'Entertain', group: 'expense' },
+    { value: 'Salary', label: 'Salary', group: 'income' },
+    { value: 'Etc', label: 'Etc', group: 'income' },
+  ];
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      // Search filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchNotes = t.notes?.toLowerCase().includes(q);
+        const matchCategory = (t.expense_category || t.income_category || '').toLowerCase().includes(q);
+        const matchAmount = formatCurrency(t.total).toLowerCase().includes(q);
+        if (!matchNotes && !matchCategory && !matchAmount) return false;
+      }
+      // Category filter
+      if (categoryFilter !== 'all') {
+        if (categoryFilter === 'income') return t.type === 'income';
+        if (categoryFilter === 'expense') return t.type === 'expense';
+        return t.expense_category === categoryFilter || t.income_category === categoryFilter;
+      }
+      return true;
+    });
+  }, [transactions, searchQuery, categoryFilter]);
 
   // Fetch account_balances to know which account each transaction used
   useEffect(() => {
@@ -174,10 +209,72 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
           <Clock size={18} className="text-violet-400" />
           <h2 className="text-lg font-bold text-white">Riwayat Transaksi</h2>
         </div>
-        <span className="text-sm text-gray-500">{transactions.length} transaksi</span>
+        <span className="text-sm text-gray-500">{filteredTransactions.length} / {transactions.length}</span>
       </div>
+
+      {/* Search & Filter Bar */}
+      <div className="px-6 py-3 border-b border-white/5 space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari transaksi..."
+              className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-gray-200 focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-300"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-2.5 rounded-xl border transition-all ${
+              showFilters || categoryFilter !== 'all'
+                ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-400'
+                : 'bg-white/5 border-white/10 text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            <Filter size={14} />
+          </button>
+        </div>
+
+        {showFilters && (
+          <div className="flex flex-wrap gap-1.5">
+            {ALL_CATEGORIES.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setCategoryFilter(cat.value)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                  categoryFilter === cat.value
+                    ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                    : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-transparent'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {filteredTransactions.length === 0 ? (
+        <div className="px-6 py-10 text-center">
+          <p className="text-gray-500 text-sm">
+            {searchQuery || categoryFilter !== 'all' 
+              ? 'Tidak ada transaksi yang cocok' 
+              : 'Belum ada transaksi'}
+          </p>
+        </div>
+      ) : (
       <div className="divide-y divide-white/5 max-h-[480px] overflow-y-auto">
-        {transactions.map((transaction) => (
+        {filteredTransactions.map((transaction) => (
           <div 
             key={transaction.id} 
             className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.03] transition-colors group"
@@ -303,6 +400,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 };

@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Utensils, Car, Wrench, Gamepad2, MoreHorizontal } from 'lucide-react';
 import { TransactionWithBalance } from '../types/transaction';
 
 interface ExpenseChartProps {
@@ -19,6 +19,7 @@ interface ExpenseChartProps {
 interface DailyData {
   date: string;
   fullDate: string;
+  dateKey: string;
   expense: number;
 }
 
@@ -41,37 +42,66 @@ const formatFullCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-lg rounded-xl p-3 shadow-lg border border-white/20">
-        <p className="text-sm font-semibold text-white mb-2">{payload[0]?.payload?.fullDate}</p>
-        <div className="space-y-1">
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-2">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-sm text-white/70">{entry.name}:</span>
-              <span className="text-sm font-bold" style={{ color: entry.color }}>
-                {formatFullCurrency(entry.value)}
+const getCatIcon = (cat: string | null) => {
+  switch (cat) {
+    case 'Foods': return <Utensils size={12} />;
+    case 'Transportation': return <Car size={12} />;
+    case 'Equipment': return <Wrench size={12} />;
+    case 'Entertainment': return <Gamepad2 size={12} />;
+    default: return <MoreHorizontal size={12} />;
+  }
+};
+
+const DetailTooltip = ({ active, payload, transactions }: any) => {
+  if (!active || !payload || !payload.length) return null;
+
+  const dateKey = payload[0]?.payload?.dateKey;
+  const fullDate = payload[0]?.payload?.fullDate;
+  const totalExpense = payload[0]?.value || 0;
+
+  const dayTransactions: TransactionWithBalance[] = dateKey
+    ? transactions.filter((t: TransactionWithBalance) => t.type === 'expense' && t.created_at.startsWith(dateKey))
+    : [];
+
+  return (
+    <div className="bg-[#1e1e2a] rounded-xl p-3 shadow-xl border border-white/10 min-w-[200px] max-w-[260px]">
+      <p className="text-xs font-semibold text-white mb-1">{fullDate}</p>
+      <p className="text-sm font-bold text-rose-400 mb-2">
+        -{formatFullCurrency(totalExpense)}
+      </p>
+
+      {dayTransactions.length > 0 && (
+        <div className="border-t border-white/5 pt-2 space-y-1.5 max-h-[150px] overflow-y-auto">
+          {dayTransactions.map((t: TransactionWithBalance) => (
+            <div key={t.id} className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-md bg-rose-500/15 text-rose-400 flex items-center justify-center flex-shrink-0">
+                {getCatIcon(t.expense_category)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-medium text-gray-200 truncate">
+                  {t.expense_category || 'Expense'}
+                  {t.notes && <span className="text-gray-500"> · {t.notes}</span>}
+                </p>
+              </div>
+              <span className="text-[11px] font-bold text-rose-400 flex-shrink-0">
+                -{formatFullCurrency(t.total)}
               </span>
             </div>
           ))}
         </div>
-      </div>
-    );
-  }
-  return null;
+      )}
+
+      {dayTransactions.length === 0 && (
+        <p className="text-[10px] text-gray-600 border-t border-white/5 pt-2">Tidak ada pengeluaran</p>
+      )}
+    </div>
+  );
 };
 
 const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) => {
   const chartData = useMemo(() => {
-    // Group transactions by date
     const dailyMap = new Map<string, { expense: number }>();
     
-    // Get last 14 days
     const today = new Date();
     for (let i = 13; i >= 0; i--) {
       const date = new Date(today);
@@ -80,7 +110,6 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
       dailyMap.set(dateKey, { expense: 0 });
     }
     
-    // Aggregate transactions
     transactions.forEach((t) => {
       const dateKey = new Date(t.created_at).toISOString().split('T')[0];
       if (dailyMap.has(dateKey)) {
@@ -91,13 +120,13 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
       }
     });
     
-    // Convert to array
     const data: DailyData[] = [];
     dailyMap.forEach((value, key) => {
       const date = new Date(key);
       data.push({
         date: new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(date),
         fullDate: new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date),
+        dateKey: key,
         expense: value.expense,
       });
     });
@@ -165,7 +194,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
               tickFormatter={formatCurrency}
               dx={-5}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<DetailTooltip transactions={transactions} />} />
             <Area
               type="monotone"
               dataKey="expense"
