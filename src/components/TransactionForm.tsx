@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Send } from 'lucide-react';
+import { Plus, Minus, Send, Wallet, CreditCard, PiggyBank } from 'lucide-react';
 import {
   TransactionType,
   ExpenseCategory,
   IncomeCategory,
+  AccountType,
   TransactionFormData,
+  BalancePerAccount,
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
 } from '../types/transaction';
@@ -12,15 +14,36 @@ import {
 interface TransactionFormProps {
   onSubmit: (data: TransactionFormData) => Promise<void>;
   loading: boolean;
+  accountBalances: BalancePerAccount[];
 }
 
-const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading }) => {
+const PAYMENT_SOURCES: { value: AccountType; label: string; icon: React.ReactNode }[] = [
+  { value: 'rekening', label: 'Rekening', icon: <Wallet size={14} /> },
+  { value: 'dana', label: 'Dana', icon: <CreditCard size={14} /> },
+  { value: 'pocket', label: 'Pocket', icon: <PiggyBank size={14} /> },
+];
+
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, accountBalances }) => {
   const [type, setType] = useState<TransactionType>('expense');
   const [expenseCategory, setExpenseCategory] = useState<ExpenseCategory>('Foods');
   const [incomeCategory, setIncomeCategory] = useState<IncomeCategory>('Salary');
+  const [paymentSource, setPaymentSource] = useState<AccountType>('rekening');
   const [notes, setNotes] = useState('');
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('1');
+
+  const getBalance = (accountType: AccountType): number => {
+    return accountBalances.find(a => a.account_type === accountType)?.balance || 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +57,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading }) 
 
     if (type === 'expense') {
       formData.expense_category = expenseCategory;
+      formData.payment_source = paymentSource;
     } else {
       formData.income_category = incomeCategory;
     }
@@ -105,6 +129,32 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading }) 
             </select>
           )}
         </div>
+
+        {/* Payment Source (only for expenses) */}
+        {type === 'expense' && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Bayar Dari</label>
+            <div className="grid grid-cols-3 gap-2">
+              {PAYMENT_SOURCES.map((source) => (
+                <button
+                  key={source.value}
+                  type="button"
+                  onClick={() => setPaymentSource(source.value)}
+                  className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl text-xs font-semibold transition-all duration-200
+                    ${paymentSource === source.value
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                >
+                  {source.icon}
+                  <span>{source.label}</span>
+                  <span className={`text-[10px] ${paymentSource === source.value ? 'text-white/80' : 'text-gray-400'}`}>
+                    {formatCurrency(getBalance(source.value))}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Notes */}
         <div>

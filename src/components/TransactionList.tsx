@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Trash2, Edit, Utensils, Car, Wrench, Gamepad2, Banknote, MoreHorizontal, Clock, X, Save } from 'lucide-react';
-import { TransactionWithBalance } from '../types/transaction';
+import React, { useState, useEffect } from 'react';
+import { Trash2, Edit, Utensils, Car, Wrench, Gamepad2, Banknote, MoreHorizontal, Clock, X, Save, Wallet, CreditCard, PiggyBank } from 'lucide-react';
+import { TransactionWithBalance, AccountType } from '../types/transaction';
+import { supabase } from '../lib/supabase';
 
 interface TransactionListProps {
   transactions: TransactionWithBalance[];
@@ -50,10 +51,59 @@ const getCategoryLabel = (transaction: TransactionWithBalance): string => {
   return transaction.expense_category || 'Expense';
 };
 
+const getAccountBadge = (accountType: AccountType) => {
+  switch (accountType) {
+    case 'rekening':
+      return (
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-600">
+          <Wallet size={10} /> Rek
+        </span>
+      );
+    case 'dana':
+      return (
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-600">
+          <CreditCard size={10} /> Dana
+        </span>
+      );
+    case 'pocket':
+      return (
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-600">
+          <PiggyBank size={10} /> Pocket
+        </span>
+      );
+    default:
+      return null;
+  }
+};
+
 const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading, onDelete, onEdit }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState('');
   const [editQuantity, setEditQuantity] = useState('');
+  const [accountMap, setAccountMap] = useState<Record<string, AccountType>>({});
+
+  // Fetch account_balances to know which account each transaction used
+  useEffect(() => {
+    const fetchAccountInfo = async () => {
+      if (transactions.length === 0) return;
+      const txIds = transactions.map(t => t.id);
+      const { data, error } = await supabase
+        .from('account_balances')
+        .select('transaction_id, account_type')
+        .in('transaction_id', txIds);
+      
+      if (!error && data) {
+        const map: Record<string, AccountType> = {};
+        data.forEach(row => {
+          if (row.transaction_id) {
+            map[row.transaction_id] = row.account_type as AccountType;
+          }
+        });
+        setAccountMap(map);
+      }
+    };
+    fetchAccountInfo();
+  }, [transactions]);
 
   const startEditing = (transaction: TransactionWithBalance) => {
     setEditingId(transaction.id);
@@ -216,6 +266,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
                     {transaction.quantity > 1 && (
                       <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 ml-1">
                         ×{transaction.quantity}
+                      </span>
+                    )}
+                    {accountMap[transaction.id] && (
+                      <span className="ml-1">
+                        {getAccountBadge(accountMap[transaction.id])}
                       </span>
                     )}
                   </p>

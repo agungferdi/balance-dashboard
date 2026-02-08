@@ -4,6 +4,8 @@ export type ExpenseCategory = 'Foods' | 'Transportation' | 'Equipment' | 'Entert
 
 export type IncomeCategory = 'Salary' | 'Etc';
 
+export type AccountType = 'rekening' | 'dana' | 'pocket';
+
 export interface Transaction {
   id: string;
   type: TransactionType;
@@ -26,6 +28,11 @@ export interface BalanceView {
   balance: number;
 }
 
+export interface BalancePerAccount {
+  account_type: AccountType;
+  balance: number;
+}
+
 export interface TransactionFormData {
   type: TransactionType;
   expense_category?: ExpenseCategory;
@@ -33,7 +40,20 @@ export interface TransactionFormData {
   notes: string;
   price: number;
   quantity: number;
+  payment_source?: AccountType;
+}
+
+export interface TransferFormData {
+  from_account: AccountType;
+  to_account: AccountType;
+  amount: number;
+  notes: string;
 }
 
 export const EXPENSE_CATEGORIES: ExpenseCategory[] = ['Foods', 'Transportation', 'Equipment', 'Entertainment'];
 export const INCOME_CATEGORIES: IncomeCategory[] = ['Salary', 'Etc'];
+export const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
+  { value: 'rekening', label: 'Rekening' },
+  { value: 'dana', label: 'Dana' },
+  { value: 'pocket', label: 'Pocket' },
+];
