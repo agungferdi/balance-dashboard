@@ -67,9 +67,9 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-xl">
-      <h2 className="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
-        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center">
+    <div className="bg-[#1a1a24] rounded-2xl p-6 shadow-[0_0_30px_rgba(59,130,246,0.06)] border border-white/5">
+      <h2 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
+        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
           <ArrowRight size={16} className="text-white" />
         </div>
         Transfer Antar Akun
@@ -78,7 +78,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* From Account */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Dari Akun</label>
+          <label className="block text-sm font-semibold text-gray-300 mb-2">Dari Akun</label>
           <div className="grid grid-cols-3 gap-2">
             {ACCOUNT_OPTIONS.map((acc) => (
               <button
@@ -88,11 +88,11 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
                 className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl text-xs font-semibold transition-all duration-200
                   ${fromAccount === acc.value 
                     ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg' 
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                    : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
               >
                 {acc.icon}
                 <span>{acc.label}</span>
-                <span className={`text-[10px] ${fromAccount === acc.value ? 'text-white/80' : 'text-gray-400'}`}>
+                <span className={`text-[10px] ${fromAccount === acc.value ? 'text-white/80' : 'text-gray-500'}`}>
                   {formatCurrency(getBalance(acc.value))}
                 </span>
               </button>
@@ -102,7 +102,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
 
         {/* To Account */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Ke Akun</label>
+          <label className="block text-sm font-semibold text-gray-300 mb-2">Ke Akun</label>
           <div className="grid grid-cols-2 gap-2">
             {availableTargets.map((acc) => (
               <button
@@ -112,11 +112,11 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
                 className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl text-xs font-semibold transition-all duration-200
                   ${toAccount === acc.value 
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg' 
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                    : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
               >
                 {acc.icon}
                 <span>{acc.label}</span>
-                <span className={`text-[10px] ${toAccount === acc.value ? 'text-white/80' : 'text-gray-400'}`}>
+                <span className={`text-[10px] ${toAccount === acc.value ? 'text-white/80' : 'text-gray-500'}`}>
                   {formatCurrency(getBalance(acc.value))}
                 </span>
               </button>
@@ -126,7 +126,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
 
         {/* Amount */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Jumlah (Rp)</label>
+          <label className="block text-sm font-semibold text-gray-300 mb-2">Jumlah (Rp)</label>
           <input
             type="number"
             value={amount}
@@ -134,19 +134,19 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
             placeholder="0"
             required
             min="1"
-            className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all placeholder:text-gray-400"
+            className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 rounded-xl text-sm font-medium text-gray-200 focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600"
           />
         </div>
 
         {/* Notes */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Catatan</label>
+          <label className="block text-sm font-semibold text-gray-300 mb-2">Catatan</label>
           <input
             type="text"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Contoh: Top up Dana, Sisihkan tabungan"
-            className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all placeholder:text-gray-400"
+            className="w-full px-4 py-3 bg-white/5 border-2 border-white/10 rounded-xl text-sm text-gray-200 focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600"
           />
         </div>
 

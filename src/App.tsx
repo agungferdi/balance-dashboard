@@ -215,8 +215,8 @@ function App() {
               onClick={() => setShowTransfer(!showTransfer)}
               className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${
                 showTransfer
-                  ? 'bg-white text-gray-500 hover:bg-gray-50 shadow-xl'
-                  : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40'
+                  ? 'bg-[#1a1a24] text-gray-400 hover:bg-[#1e1e28] border border-white/5'
+                  : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30'
               }`}
             >
               <ArrowLeftRight size={16} />
@@ -238,7 +238,7 @@ function App() {
           </div>
         </div>
       </main>
-      <footer className="text-center py-6 text-white/40 text-sm">
+      <footer className="text-center py-6 text-gray-600 text-sm">
         © 2025 Balance · Track your money smartly
       </footer>
     </div>

@@ -114,29 +114,29 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-lg rounded-2xl p-5 border border-white/20 shadow-xl mb-6">
+      <div className="bg-[#1a1a24] rounded-2xl p-5 border border-white/5 shadow-[0_0_30px_rgba(139,92,246,0.05)] mb-6">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <TrendingUp size={16} className="text-white" />
+          <div className="w-8 h-8 bg-violet-500/15 rounded-lg flex items-center justify-center">
+            <TrendingUp size={16} className="text-violet-400" />
           </div>
           <h2 className="text-base font-bold text-white">Grafik 14 Hari Terakhir</h2>
         </div>
-        <div className="h-40 bg-white/10 rounded-xl animate-pulse" />
+        <div className="h-40 bg-white/5 rounded-xl animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-lg rounded-2xl p-5 border border-white/20 shadow-xl mb-6">
+    <div className="bg-[#1a1a24] rounded-2xl p-5 border border-white/5 shadow-[0_0_30px_rgba(139,92,246,0.05)] mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <TrendingUp size={16} className="text-white" />
+          <div className="w-8 h-8 bg-violet-500/15 rounded-lg flex items-center justify-center">
+            <TrendingUp size={16} className="text-violet-400" />
           </div>
           <h2 className="text-base font-bold text-white">Grafik Pengeluaran 14 Hari</h2>
         </div>
         <div className="text-right">
-          <p className="text-[10px] text-white/50">Hari ini</p>
+          <p className="text-[10px] text-gray-500">Hari ini</p>
           <p className="text-xs font-bold text-rose-300">-{formatFullCurrency(totalExpenseToday)}</p>
         </div>
       </div>
@@ -150,18 +150,18 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
                 <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
             <XAxis 
               dataKey="date" 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)' }}
+              tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.35)' }}
               dy={5}
             />
             <YAxis 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)' }}
+              tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.35)' }}
               tickFormatter={formatCurrency}
               dx={-5}
             />
@@ -181,10 +181,10 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
       </div>
 
       {/* Quick Stats */}
-      <div className="mt-4 pt-4 border-t border-white/10">
-        <div className="bg-rose-500/20 rounded-xl p-3">
-          <p className="text-[10px] text-rose-300 font-medium mb-1">Total Pengeluaran (14 hari)</p>
-          <p className="text-base font-bold text-rose-300">
+      <div className="mt-4 pt-4 border-t border-white/5">
+        <div className="bg-rose-500/10 rounded-xl p-3">
+          <p className="text-[10px] text-rose-400 font-medium mb-1">Total Pengeluaran (14 hari)</p>
+          <p className="text-base font-bold text-rose-400">
             {formatFullCurrency(chartData.reduce((sum, d) => sum + d.expense, 0))}
           </p>
         </div>

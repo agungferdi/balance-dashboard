@@ -55,19 +55,19 @@ const getAccountBadge = (accountType: AccountType) => {
   switch (accountType) {
     case 'rekening':
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-600">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-500/15 text-indigo-400">
           <Wallet size={10} /> Rek
         </span>
       );
     case 'dana':
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-600">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/15 text-blue-400">
           <CreditCard size={10} /> Dana
         </span>
       );
     case 'pocket':
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-600">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-400">
           <PiggyBank size={10} /> Pocket
         </span>
       );
@@ -128,20 +128,20 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
   };
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-          <Clock size={18} className="text-indigo-500" />
-          <h2 className="text-lg font-bold text-gray-800">Riwayat Transaksi</h2>
+      <div className="bg-[#1a1a24] rounded-2xl shadow-[0_0_30px_rgba(139,92,246,0.05)] border border-white/5 overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/5 flex items-center gap-2">
+          <Clock size={18} className="text-violet-400" />
+          <h2 className="text-lg font-bold text-white">Riwayat Transaksi</h2>
         </div>
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-white/5">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="px-6 py-4 animate-pulse flex items-center gap-4">
-              <div className="w-10 h-10 bg-gray-200 rounded-xl"></div>
+              <div className="w-10 h-10 bg-white/10 rounded-xl"></div>
               <div className="flex-1">
-                <div className="h-4 bg-gray-200 rounded w-28 mb-2"></div>
-                <div className="h-3 bg-gray-100 rounded w-20"></div>
+                <div className="h-4 bg-white/10 rounded w-28 mb-2"></div>
+                <div className="h-3 bg-white/5 rounded w-20"></div>
               </div>
-              <div className="h-5 bg-gray-200 rounded w-24"></div>
+              <div className="h-5 bg-white/10 rounded w-24"></div>
             </div>
           ))}
         </div>
@@ -151,51 +151,51 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
 
   if (transactions.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-          <Clock size={18} className="text-indigo-500" />
-          <h2 className="text-lg font-bold text-gray-800">Riwayat Transaksi</h2>
+      <div className="bg-[#1a1a24] rounded-2xl shadow-[0_0_30px_rgba(139,92,246,0.05)] border border-white/5 overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/5 flex items-center gap-2">
+          <Clock size={18} className="text-violet-400" />
+          <h2 className="text-lg font-bold text-white">Riwayat Transaksi</h2>
         </div>
         <div className="px-6 py-16 text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Clock size={28} className="text-gray-400" />
+          <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Clock size={28} className="text-gray-600" />
           </div>
-          <p className="text-gray-500 font-medium">Belum ada transaksi</p>
-          <p className="text-gray-400 text-sm mt-1">Mulai catat pengeluaran dan pemasukan Anda</p>
+          <p className="text-gray-400 font-medium">Belum ada transaksi</p>
+          <p className="text-gray-600 text-sm mt-1">Mulai catat pengeluaran dan pemasukan Anda</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+    <div className="bg-[#1a1a24] rounded-2xl shadow-[0_0_30px_rgba(139,92,246,0.05)] border border-white/5 overflow-hidden">
+      <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Clock size={18} className="text-indigo-500" />
-          <h2 className="text-lg font-bold text-gray-800">Riwayat Transaksi</h2>
+          <Clock size={18} className="text-violet-400" />
+          <h2 className="text-lg font-bold text-white">Riwayat Transaksi</h2>
         </div>
-        <span className="text-sm text-gray-400">{transactions.length} transaksi</span>
+        <span className="text-sm text-gray-500">{transactions.length} transaksi</span>
       </div>
-      <div className="divide-y divide-gray-50 max-h-[480px] overflow-y-auto">
+      <div className="divide-y divide-white/5 max-h-[480px] overflow-y-auto">
         {transactions.map((transaction) => (
           <div 
             key={transaction.id} 
-            className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50/50 transition-colors group"
+            className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.03] transition-colors group"
           >
             {editingId === transaction.id ? (
               // Edit Mode
               <>
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                   transaction.type === 'income' 
-                    ? 'bg-emerald-100 text-emerald-600' 
-                    : 'bg-rose-100 text-rose-600'
+                    ? 'bg-emerald-500/15 text-emerald-400' 
+                    : 'bg-rose-500/15 text-rose-400'
                 }`}>
                   {getCategoryIcon(transaction)}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-semibold text-gray-800">
+                    <span className="text-sm font-semibold text-gray-200">
                       {getCategoryLabel(transaction)}
                     </span>
                   </div>
@@ -206,7 +206,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
                         value={editPrice}
                         onChange={(e) => setEditPrice(e.target.value)}
                         placeholder="Harga"
-                        className="w-full px-3 py-1.5 text-sm border-2 border-indigo-200 rounded-lg focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-1.5 text-sm bg-white/5 border-2 border-indigo-500/30 rounded-lg text-gray-200 focus:outline-none focus:border-indigo-500"
                         autoFocus
                       />
                     </div>
@@ -216,7 +216,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
                         value={editQuantity}
                         onChange={(e) => setEditQuantity(e.target.value)}
                         placeholder="Qty"
-                        className="w-full px-3 py-1.5 text-sm border-2 border-indigo-200 rounded-lg focus:outline-none focus:border-indigo-500"
+                        className="w-full px-3 py-1.5 text-sm bg-white/5 border-2 border-indigo-500/30 rounded-lg text-gray-200 focus:outline-none focus:border-indigo-500"
                       />
                     </div>
                   </div>
@@ -232,7 +232,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
                   </button>
                   <button
                     onClick={cancelEditing}
-                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                    className="p-2 text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-lg transition-all"
                     title="Batal"
                   >
                     <X size={16} />
@@ -244,27 +244,27 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
               <>
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                   transaction.type === 'income' 
-                    ? 'bg-emerald-100 text-emerald-600' 
-                    : 'bg-rose-100 text-rose-600'
+                    ? 'bg-emerald-500/15 text-emerald-400' 
+                    : 'bg-rose-500/15 text-rose-400'
                 }`}>
                   {getCategoryIcon(transaction)}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-800">
+                    <span className="text-sm font-semibold text-gray-200">
                       {getCategoryLabel(transaction)}
                     </span>
                     {transaction.notes && (
-                      <span className="text-sm text-gray-400 truncate">
+                      <span className="text-sm text-gray-500 truncate">
                         · {transaction.notes}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                  <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                     {formatDate(transaction.created_at)}
                     {transaction.quantity > 1 && (
-                      <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 ml-1">
+                      <span className="bg-white/5 px-1.5 py-0.5 rounded text-gray-400 ml-1">
                         ×{transaction.quantity}
                       </span>
                     )}
@@ -277,7 +277,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
                 </div>
                 
                 <span className={`text-sm font-bold whitespace-nowrap ${
-                  transaction.type === 'income' ? 'text-emerald-600' : 'text-rose-600'
+                  transaction.type === 'income' ? 'text-emerald-400' : 'text-rose-400'
                 }`}>
                   {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.total)}
                 </span>
@@ -285,14 +285,14 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                   <button
                     onClick={() => startEditing(transaction)}
-                    className="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-all"
+                    className="p-2 text-gray-600 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all"
                     title="Edit"
                   >
                     <Edit size={16} />
                   </button>
                   <button
                     onClick={() => onDelete(transaction.id)}
-                    className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                    className="p-2 text-gray-600 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
                     title="Hapus"
                   >
                     <Trash2 size={16} />
