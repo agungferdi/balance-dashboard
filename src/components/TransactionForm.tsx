@@ -17,11 +17,22 @@ interface TransactionFormProps {
   accountBalances: BalancePerAccount[];
 }
 
-const PAYMENT_SOURCES: { value: AccountType; label: string; icon: React.ReactNode }[] = [
-  { value: 'rekening', label: 'Rekening', icon: <Wallet size={14} /> },
-  { value: 'dana', label: 'Dana', icon: <CreditCard size={14} /> },
-  { value: 'pocket', label: 'Pocket', icon: <PiggyBank size={14} /> },
+const PAYMENT_SOURCES: { value: AccountType; label: string }[] = [
+  { value: 'rekening', label: 'Rekening' },
+  { value: 'dana', label: 'Dana' },
+  { value: 'pocket', label: 'Pocket' },
 ];
+
+const getAccountIcon = (accountType: AccountType) => {
+  switch (accountType) {
+    case 'rekening':
+      return <Wallet size={14} />;
+    case 'pocket':
+      return <PiggyBank size={14} />;
+    default:
+      return <CreditCard size={14} />;
+  }
+};
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('id-ID', {
@@ -134,7 +145,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
         {type === 'expense' && (
           <div>
             <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Bayar Dari</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {PAYMENT_SOURCES.map((source) => (
                 <button
                   key={source.value}
@@ -145,7 +156,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20'
                       : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10'}`}
                 >
-                  {source.icon}
+                  {getAccountIcon(source.value)}
                   <span>{source.label}</span>
                   <span className={`text-[10px] ${paymentSource === source.value ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
                     {formatCurrency(getBalance(source.value))}

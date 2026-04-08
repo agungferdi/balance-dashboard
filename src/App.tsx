@@ -10,6 +10,17 @@ import TransactionList from './components/TransactionList';
 import TransferForm from './components/TransferForm';
 import './App.css';
 
+const getErrorMessage = (error: unknown): string => {
+  if (error && typeof error === 'object') {
+    const maybeError = error as { message?: string; details?: string; hint?: string };
+    return maybeError.message || maybeError.details || maybeError.hint || 'Unknown error';
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return 'Unknown error';
+};
+
 function App() {
   const [transactions, setTransactions] = useState<TransactionWithBalance[]>([]);
   const [balance, setBalance] = useState<BalanceView | null>(null);
@@ -139,27 +150,65 @@ function App() {
   const handleTransfer = async (data: TransferFormData) => {
     setTransferring(true);
     try {
-      const { error } = await supabase
+      if (data.from_account === data.to_account) {
+        throw new Error('Akun asal dan tujuan tidak boleh sama');
+      }
+      if (!Number.isFinite(data.amount) || data.amount <= 0) {
+        throw new Error('Jumlah transfer harus lebih dari 0');
+      }
+
+      const { data: transferTx, error: transferTxError } = await supabase
+        .from('transactions')
+        .insert([
+          {
+            type: 'transfer',
+            from_account: data.from_account,
+            to_account: data.to_account,
+            notes: data.notes || `Transfer ${data.from_account} ke ${data.to_account}`,
+            price: data.amount,
+            quantity: 1,
+            expense_category: null,
+            income_category: null,
+          },
+        ])
+        .select('id')
+        .single();
+
+      if (transferTxError) throw transferTxError;
+      if (!transferTx?.id) throw new Error('Transfer gagal dibuat: ID transaksi tidak ditemukan');
+
+      const { error: accountBalanceError } = await supabase
         .from('account_balances')
         .insert([
           {
+            transaction_id: transferTx.id,
             account_type: data.from_account,
             amount: -data.amount,
             notes: data.notes || `Transfer ke ${data.to_account}`,
           },
           {
+            transaction_id: transferTx.id,
             account_type: data.to_account,
             amount: data.amount,
             notes: data.notes || `Transfer dari ${data.from_account}`,
           },
         ]);
 
-      if (error) throw error;
+      if (accountBalanceError) {
+        // Roll back transfer transaction to avoid leaving half-complete data.
+        await supabase
+          .from('transactions')
+          .delete()
+          .eq('id', transferTx.id);
 
-      await Promise.all([fetchBalance(), fetchAccountBalances()]);
+        throw accountBalanceError;
+      }
+
+      await Promise.all([fetchTransactions(), fetchBalance(), fetchAccountBalances()]);
     } catch (error) {
-      console.error('Error transferring:', error);
-      alert('Gagal melakukan transfer');
+      const message = getErrorMessage(error);
+      console.error('Error transferring:', { raw: error, message });
+      alert(`Gagal melakukan transfer: ${message}`);
     } finally {
       setTransferring(false);
     }

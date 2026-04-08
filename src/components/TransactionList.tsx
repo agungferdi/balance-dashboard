@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Trash2, Edit, Utensils, Car, Wrench, Gamepad2, Banknote, MoreHorizontal, Clock, X, Save, Wallet, CreditCard, PiggyBank, Search, Filter } from 'lucide-react';
-import { TransactionWithBalance, AccountType } from '../types/transaction';
+import { Trash2, Edit, Utensils, Car, Wrench, Gamepad2, Banknote, MoreHorizontal, Clock, X, Save, Wallet, CreditCard, PiggyBank, Search, Filter, ArrowLeftRight } from 'lucide-react';
+import { TransactionWithBalance, AccountType, ACCOUNT_TYPES } from '../types/transaction';
 import { supabase } from '../lib/supabase';
 
 interface TransactionListProps {
@@ -8,6 +8,12 @@ interface TransactionListProps {
   loading: boolean;
   onDelete: (id: string) => Promise<void>;
   onEdit: (id: string, price: number, quantity: number) => Promise<void>;
+}
+
+interface AccountPathInfo {
+  source?: AccountType;
+  from?: AccountType;
+  to?: AccountType;
 }
 
 const formatCurrency = (amount: number): string => {
@@ -34,6 +40,9 @@ const getCategoryIcon = (transaction: TransactionWithBalance) => {
     if (transaction.income_category === 'Salary') return <Banknote size={18} />;
     return <MoreHorizontal size={18} />;
   }
+  if (transaction.type === 'transfer') {
+    return <ArrowLeftRight size={18} />;
+  }
   
   switch (transaction.expense_category) {
     case 'Foods': return <Utensils size={18} />;
@@ -48,39 +57,69 @@ const getCategoryLabel = (transaction: TransactionWithBalance): string => {
   if (transaction.type === 'income') {
     return transaction.income_category || 'Income';
   }
+  if (transaction.type === 'transfer') {
+    return 'Transfer';
+  }
   return transaction.expense_category || 'Expense';
 };
 
-const getAccountBadge = (accountType: AccountType) => {
+const ACCOUNT_LABEL_MAP = ACCOUNT_TYPES.reduce((map, account) => {
+  map[account.value] = account.label;
+  return map;
+}, {} as Record<AccountType, string>);
+
+const getAccountBadgeStyle = (accountType: AccountType): string => {
   switch (accountType) {
     case 'rekening':
-      return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400">
-          <Wallet size={10} /> Rek
-        </span>
-      );
+      return 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400';
     case 'dana':
-      return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
-          <CreditCard size={10} /> Dana
-        </span>
-      );
+      return 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400';
     case 'pocket':
-      return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
-          <PiggyBank size={10} /> Pocket
-        </span>
-      );
+      return 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400';
+    case 'Saham':
+      return 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400';
+    case 'Crypto':
+      return 'bg-cyan-50 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-400';
+    case 'Futures':
+      return 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400';
+    case 'Jago':
+      return 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400';
+    case 'Gopay':
+      return 'bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-400';
+    case 'Reksadana':
+      return 'bg-lime-50 text-lime-600 dark:bg-lime-500/15 dark:text-lime-400';
     default:
-      return null;
+      return 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300';
   }
+};
+
+const getAccountIcon = (accountType: AccountType) => {
+  switch (accountType) {
+    case 'rekening':
+    case 'Jago':
+      return <Wallet size={10} />;
+    case 'pocket':
+    case 'Reksadana':
+      return <PiggyBank size={10} />;
+    default:
+      return <CreditCard size={10} />;
+  }
+};
+
+const getAccountBadge = (accountType: AccountType) => {
+  const label = accountType === 'rekening' ? 'Rek' : ACCOUNT_LABEL_MAP[accountType] || accountType;
+  return (
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${getAccountBadgeStyle(accountType)}`}>
+      {getAccountIcon(accountType)} {label}
+    </span>
+  );
 };
 
 const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading, onDelete, onEdit }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState('');
   const [editQuantity, setEditQuantity] = useState('');
-  const [accountMap, setAccountMap] = useState<Record<string, AccountType>>({});
+  const [accountMap, setAccountMap] = useState<Record<string, AccountPathInfo>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -89,6 +128,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
     { value: 'all', label: 'Semua' },
     { value: 'income', label: 'Pemasukan', group: 'type' },
     { value: 'expense', label: 'Pengeluaran', group: 'type' },
+    { value: 'transfer', label: 'Transfer', group: 'type' },
     { value: 'Foods', label: 'Foods', group: 'expense' },
     { value: 'Transportation', label: 'Transport', group: 'expense' },
     { value: 'Equipment', label: 'Equipment', group: 'expense' },
@@ -111,6 +151,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
       if (categoryFilter !== 'all') {
         if (categoryFilter === 'income') return t.type === 'income';
         if (categoryFilter === 'expense') return t.type === 'expense';
+        if (categoryFilter === 'transfer') return t.type === 'transfer';
         return t.expense_category === categoryFilter || t.income_category === categoryFilter;
       }
       return true;
@@ -124,14 +165,30 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
       const txIds = transactions.map(t => t.id);
       const { data, error } = await supabase
         .from('account_balances')
-        .select('transaction_id, account_type')
+        .select('transaction_id, account_type, amount')
         .in('transaction_id', txIds);
       
       if (!error && data) {
-        const map: Record<string, AccountType> = {};
+        const map: Record<string, AccountPathInfo> = {};
         data.forEach(row => {
           if (row.transaction_id) {
-            map[row.transaction_id] = row.account_type as AccountType;
+            const txId = row.transaction_id as string;
+            const accountType = row.account_type as AccountType;
+            const amount = Number(row.amount) || 0;
+
+            if (!map[txId]) {
+              map[txId] = {};
+            }
+
+            if (amount < 0) {
+              map[txId].from = accountType;
+            } else if (amount > 0) {
+              map[txId].to = accountType;
+            }
+
+            if (!map[txId].source) {
+              map[txId].source = amount < 0 ? accountType : map[txId].source || accountType;
+            }
           }
         });
         setAccountMap(map);
@@ -274,18 +331,25 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
         </div>
       ) : (
       <div className="divide-y divide-gray-100 dark:divide-white/5 max-h-[480px] overflow-y-auto">
-        {filteredTransactions.map((transaction) => (
-          <div 
-            key={transaction.id} 
+        {filteredTransactions.map((transaction) => {
+          const transferFrom = transaction.from_account || accountMap[transaction.id]?.from;
+          const transferTo = transaction.to_account || accountMap[transaction.id]?.to;
+          const sourceAccount = accountMap[transaction.id]?.source;
+
+          return (
+          <div
+            key={transaction.id}
             className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors group"
           >
             {editingId === transaction.id ? (
               // Edit Mode
               <>
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  transaction.type === 'income' 
-                    ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-400' 
-                    : 'bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-400'
+                  transaction.type === 'income'
+                    ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-400'
+                    : transaction.type === 'transfer'
+                      ? 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/15 dark:text-indigo-400'
+                      : 'bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-400'
                 }`}>
                   {getCategoryIcon(transaction)}
                 </div>
@@ -340,9 +404,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
               // View Mode
               <>
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  transaction.type === 'income' 
-                    ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-400' 
-                    : 'bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-400'
+                  transaction.type === 'income'
+                    ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/15 dark:text-emerald-400'
+                    : transaction.type === 'transfer'
+                      ? 'bg-indigo-50 text-indigo-500 dark:bg-indigo-500/15 dark:text-indigo-400'
+                      : 'bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-400'
                 }`}>
                   {getCategoryIcon(transaction)}
                 </div>
@@ -365,28 +431,41 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
                         ×{transaction.quantity}
                       </span>
                     )}
-                    {accountMap[transaction.id] && (
-                      <span className="ml-1">
-                        {getAccountBadge(accountMap[transaction.id])}
+                    {transferFrom && transferTo ? (
+                      <span className="ml-1 inline-flex items-center gap-1">
+                        {getAccountBadge(transferFrom as AccountType)}
+                        <ArrowLeftRight size={10} className="text-gray-400 dark:text-gray-500" />
+                        {getAccountBadge(transferTo as AccountType)}
                       </span>
-                    )}
+                    ) : sourceAccount ? (
+                      <span className="ml-1">
+                        {getAccountBadge(sourceAccount as AccountType)}
+                      </span>
+                    ) : null}
                   </p>
                 </div>
                 
                 <span className={`text-sm font-bold whitespace-nowrap ${
-                  transaction.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                  transaction.type === 'income'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : transaction.type === 'transfer'
+                      ? 'text-indigo-600 dark:text-indigo-400'
+                      : 'text-rose-600 dark:text-rose-400'
                 }`}>
-                  {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.total)}
+                  {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '-' : ''}
+                  {formatCurrency(transaction.total)}
                 </span>
                 
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                  <button
-                    onClick={() => startEditing(transaction)}
-                    className="p-2 text-gray-300 dark:text-gray-600 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-all"
-                    title="Edit"
-                  >
-                    <Edit size={16} />
-                  </button>
+                  {transaction.type !== 'transfer' && (
+                    <button
+                      onClick={() => startEditing(transaction)}
+                      className="p-2 text-gray-300 dark:text-gray-600 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-all"
+                      title="Edit"
+                    >
+                      <Edit size={16} />
+                    </button>
+                  )}
                   <button
                     onClick={() => onDelete(transaction.id)}
                     className="p-2 text-gray-300 dark:text-gray-600 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all"
@@ -398,7 +477,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
               </>
             )}
           </div>
-        ))}
+        )})}
       </div>
       )}
     </div>

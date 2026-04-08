@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, Send, Wallet, CreditCard, PiggyBank } from 'lucide-react';
-import { AccountType, TransferFormData, BalancePerAccount } from '../types/transaction';
+import { AccountType, TransferFormData, BalancePerAccount, ACCOUNT_TYPES } from '../types/transaction';
 
 interface TransferFormProps {
   onSubmit: (data: TransferFormData) => Promise<void>;
@@ -8,11 +8,20 @@ interface TransferFormProps {
   accountBalances: BalancePerAccount[];
 }
 
-const ACCOUNT_OPTIONS: { value: AccountType; label: string; icon: React.ReactNode; color: string }[] = [
-  { value: 'rekening', label: 'Rekening', icon: <Wallet size={16} />, color: 'indigo' },
-  { value: 'dana', label: 'Dana', icon: <CreditCard size={16} />, color: 'blue' },
-  { value: 'pocket', label: 'Pocket', icon: <PiggyBank size={16} />, color: 'amber' },
-];
+const ACCOUNT_OPTIONS = ACCOUNT_TYPES;
+
+const getAccountIcon = (accountType: AccountType) => {
+  switch (accountType) {
+    case 'rekening':
+    case 'Jago':
+      return <Wallet size={16} />;
+    case 'pocket':
+    case 'Reksadana':
+      return <PiggyBank size={16} />;
+    default:
+      return <CreditCard size={16} />;
+  }
+};
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('id-ID', {
@@ -79,7 +88,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
         {/* From Account */}
         <div>
           <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Dari Akun</label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {ACCOUNT_OPTIONS.map((acc) => (
               <button
                 key={acc.value}
@@ -90,7 +99,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
                     ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg' 
                     : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10'}`}
               >
-                {acc.icon}
+                {getAccountIcon(acc.value)}
                 <span>{acc.label}</span>
                 <span className={`text-[10px] ${fromAccount === acc.value ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
                   {formatCurrency(getBalance(acc.value))}
@@ -103,7 +112,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
         {/* To Account */}
         <div>
           <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Ke Akun</label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {availableTargets.map((acc) => (
               <button
                 key={acc.value}
@@ -114,7 +123,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ onSubmit, loading, accountB
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg' 
                     : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10'}`}
               >
-                {acc.icon}
+                {getAccountIcon(acc.value)}
                 <span>{acc.label}</span>
                 <span className={`text-[10px] ${toAccount === acc.value ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
                   {formatCurrency(getBalance(acc.value))}
