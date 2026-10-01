@@ -22,7 +22,7 @@ const getAccountBalance = (accountBalances: BalancePerAccount[], type: AccountTy
 };
 
 const CORE_ACCOUNT_TYPES: AccountType[] = ['rekening', 'dana', 'pocket'];
-const EXTRA_ACCOUNT_TYPES: AccountType[] = ['Saham', 'Crypto', 'Futures', 'Jago', 'Gopay', 'Reksadana'];
+const EXTRA_ACCOUNT_TYPES: AccountType[] = ['Saham', 'Crypto', 'Futures', 'Jago', 'Gopay', 'Shopeepay', 'Reksadana'];
 
 const getAccountStyle = (type: AccountType) => {
   switch (type) {
@@ -97,6 +97,15 @@ const getAccountStyle = (type: AccountType) => {
         iconColor: 'text-teal-500 dark:text-teal-400',
         amountColor: 'text-teal-600 dark:text-teal-300',
         icon: <CreditCard size={16} className="text-teal-500 dark:text-teal-400" />,
+      };
+    case 'Shopeepay':
+      return {
+        border: 'border-orange-100 dark:border-orange-500/10',
+        shadow: 'shadow-sm dark:shadow-[0_0_20px_rgba(249,115,22,0.06)]',
+        iconWrap: 'bg-orange-50 dark:bg-orange-500/15',
+        iconColor: 'text-orange-500 dark:text-orange-400',
+        amountColor: 'text-orange-600 dark:text-orange-300',
+        icon: <CreditCard size={16} className="text-orange-500 dark:text-orange-400" />,
       };
     case 'Reksadana':
       return {

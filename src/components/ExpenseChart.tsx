@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, Utensils, Car, Wrench, Gamepad2, MoreHorizontal } from 'lucide-react';
+import { TrendingUp, Utensils, Car, Wrench, Gamepad2, Footprints, MoreHorizontal } from 'lucide-react';
 import { TransactionWithBalance } from '../types/transaction';
 import { useTheme } from '../context/ThemeContext';
 
@@ -67,6 +67,7 @@ const getCatIcon = (cat: string | null) => {
     case 'Transportation': return <Car size={12} />;
     case 'Equipment': return <Wrench size={12} />;
     case 'Entertainment': return <Gamepad2 size={12} />;
+    case 'Running': return <Footprints size={12} />;
     default: return <MoreHorizontal size={12} />;
   }
 };
