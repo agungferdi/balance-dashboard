@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Plus, Minus, Send, Wallet, CreditCard, PiggyBank } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Plus, Minus, Send, Wallet, CreditCard, PiggyBank, Camera, Loader2, ScanLine, X } from 'lucide-react';
+import { scanReceipt } from '../lib/receipt';
+import { notify } from '../lib/notifications';
 import {
   TransactionType,
   ExpenseCategory,
@@ -51,6 +53,48 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
   const [notes, setNotes] = useState('');
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('1');
+  const [scanning, setScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [scanMessage, setScanMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleReceiptSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setScanning(true);
+    setScanProgress(0);
+    setScanMessage(null);
+    try {
+      const result = await scanReceipt(file, (progress, status) => {
+        if (status === 'recognizing text') setScanProgress(progress);
+      });
+
+      if (!result.total) {
+        setScanMessage({ kind: 'error', text: 'Total tidak terbaca. Coba foto ulang lebih dekat & terang, atau isi manual.' });
+        notify('Scan struk gagal', 'Total tidak terbaca dari foto struk.', 'receipt');
+        return;
+      }
+
+      setType('expense');
+      if (result.category) setExpenseCategory(result.category);
+      setPrice(String(result.total));
+      setQuantity('1');
+      setNotes(result.merchant ? `${result.merchant} (struk)` : 'Struk');
+
+      const summary = `${formatCurrency(result.total)}${result.merchant ? ` · ${result.merchant}` : ''}${result.category ? ` · ${result.category}` : ''}`;
+      setScanMessage({ kind: 'success', text: `Terbaca: ${summary}. Periksa lalu tekan Simpan.` });
+      notify('Struk berhasil dibaca', summary, 'receipt');
+    } catch (error) {
+      console.error('Receipt scan failed:', error);
+      const offlineHint = navigator.onLine ? '' : ' Saat offline, scan hanya bisa dipakai jika engine OCR sudah pernah diunduh.';
+      setScanMessage({ kind: 'error', text: `Gagal memproses struk.${offlineHint}` });
+      notify('Scan struk gagal', 'Struk tidak bisa diproses.', 'receipt');
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const getBalance = (accountType: AccountType): number => {
     return accountBalances.find(a => a.account_type === accountType)?.balance || 0;
@@ -74,6 +118,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
     }
 
     await onSubmit(formData);
+    setScanMessage(null);
     setNotes('');
     setPrice('');
     setQuantity('1');
@@ -89,6 +134,51 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
       </h2>
       
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Receipt Scan */}
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleReceiptSelected}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={scanning}
+            className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 border-2 border-dashed border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 disabled:opacity-60 transition-all"
+          >
+            {scanning ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Membaca struk... {scanProgress > 0 ? `${Math.round(scanProgress * 100)}%` : ''}
+              </>
+            ) : (
+              <>
+                <Camera size={16} />
+                Scan Struk
+              </>
+            )}
+          </button>
+          {scanMessage && (
+            <div
+              className={`mt-2 px-3 py-2 rounded-lg text-xs flex items-start gap-2 ${
+                scanMessage.kind === 'success'
+                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
+                  : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300'
+              }`}
+            >
+              <ScanLine size={14} className="mt-0.5 shrink-0" />
+              <span className="flex-1">{scanMessage.text}</span>
+              <button type="button" onClick={() => setScanMessage(null)} className="shrink-0 opacity-60 hover:opacity-100">
+                <X size={12} />
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Type Toggle */}
         <div className="grid grid-cols-2 gap-3">
           <button

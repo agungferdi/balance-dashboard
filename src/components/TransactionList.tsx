@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Trash2, Edit, Utensils, Car, Wrench, Gamepad2, Banknote, MoreHorizontal, Clock, X, Save, Wallet, CreditCard, PiggyBank, Search, Filter, ArrowLeftRight } from 'lucide-react';
+import { Trash2, Edit, Utensils, Car, Wrench, Gamepad2, Footprints, Banknote, MoreHorizontal, Clock, X, Save, Wallet, CreditCard, PiggyBank, Search, Filter, ArrowLeftRight, Eye, EyeOff, CloudOff } from 'lucide-react';
 import { TransactionWithBalance, AccountType, ACCOUNT_TYPES } from '../types/transaction';
 import { supabase } from '../lib/supabase';
 
@@ -49,6 +49,7 @@ const getCategoryIcon = (transaction: TransactionWithBalance) => {
     case 'Transportation': return <Car size={18} />;
     case 'Equipment': return <Wrench size={18} />;
     case 'Entertainment': return <Gamepad2 size={18} />;
+    case 'Running': return <Footprints size={18} />;
     default: return <MoreHorizontal size={18} />;
   }
 };
@@ -86,6 +87,8 @@ const getAccountBadgeStyle = (accountType: AccountType): string => {
       return 'bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400';
     case 'Gopay':
       return 'bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-400';
+    case 'Shopeepay':
+      return 'bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400';
     case 'Reksadana':
       return 'bg-lime-50 text-lime-600 dark:bg-lime-500/15 dark:text-lime-400';
     default:
@@ -123,6 +126,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
 
   const ALL_CATEGORIES = [
     { value: 'all', label: 'Semua' },
@@ -133,12 +137,19 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
     { value: 'Transportation', label: 'Transport', group: 'expense' },
     { value: 'Equipment', label: 'Equipment', group: 'expense' },
     { value: 'Entertainment', label: 'Entertain', group: 'expense' },
+    { value: 'Running', label: 'Running', group: 'expense' },
     { value: 'Salary', label: 'Salary', group: 'income' },
     { value: 'Etc', label: 'Etc', group: 'income' },
   ];
 
+  const hiddenCount = useMemo(() => transactions.filter(t => t.is_hidden).length, [transactions]);
+  const visibleTransactions = useMemo(
+    () => (showHidden ? transactions : transactions.filter(t => !t.is_hidden)),
+    [transactions, showHidden]
+  );
+
   const filteredTransactions = useMemo(() => {
-    return transactions.filter(t => {
+    return visibleTransactions.filter(t => {
       // Search filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -156,7 +167,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
       }
       return true;
     });
-  }, [transactions, searchQuery, categoryFilter]);
+  }, [visibleTransactions, searchQuery, categoryFilter]);
 
   // Fetch account_balances to know which account each transaction used
   useEffect(() => {
@@ -266,7 +277,19 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
           <Clock size={18} className="text-violet-500 dark:text-violet-400" />
           <h2 className="text-lg font-bold text-gray-800 dark:text-white">Riwayat Transaksi</h2>
         </div>
-        <span className="text-sm text-gray-400 dark:text-gray-500">{filteredTransactions.length} / {transactions.length}</span>
+        <div className="flex items-center gap-2">
+          {hiddenCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowHidden(prev => !prev)}
+              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 transition-all"
+            >
+              {showHidden ? <EyeOff size={12} /> : <Eye size={12} />}
+              {showHidden ? 'Sembunyikan riwayat lama' : `Riwayat lama (${hiddenCount})`}
+            </button>
+          )}
+          <span className="text-sm text-gray-400 dark:text-gray-500">{filteredTransactions.length} / {visibleTransactions.length}</span>
+        </div>
       </div>
 
       {/* Search & Filter Bar */}
@@ -334,12 +357,14 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
         {filteredTransactions.map((transaction) => {
           const transferFrom = transaction.from_account || accountMap[transaction.id]?.from;
           const transferTo = transaction.to_account || accountMap[transaction.id]?.to;
-          const sourceAccount = accountMap[transaction.id]?.source;
+          const sourceAccount =
+            accountMap[transaction.id]?.source ||
+            (transaction.is_pending ? transaction.from_account || transaction.to_account : undefined);
 
           return (
           <div
             key={transaction.id}
-            className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors group"
+            className={`px-6 py-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors group ${transaction.is_hidden ? 'opacity-50' : ''}`}
           >
             {editingId === transaction.id ? (
               // Edit Mode
@@ -429,6 +454,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ transactions, loading
                     {transaction.quantity > 1 && (
                       <span className="bg-gray-100 dark:bg-white/5 px-1.5 py-0.5 rounded text-gray-500 dark:text-gray-400 ml-1">
                         ×{transaction.quantity}
+                      </span>
+                    )}
+                    {transaction.is_pending && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 ml-1">
+                        <CloudOff size={10} /> Menunggu sync
                       </span>
                     )}
                     {transferFrom && transferTo ? (

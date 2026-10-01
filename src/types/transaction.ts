@@ -1,6 +1,6 @@
 export type TransactionType = 'income' | 'expense' | 'transfer';
 
-export type ExpenseCategory = 'Foods' | 'Transportation' | 'Equipment' | 'Entertainment';
+export type ExpenseCategory = 'Foods' | 'Transportation' | 'Equipment' | 'Entertainment' | 'Running';
 
 export type IncomeCategory = 'Salary' | 'Etc';
 
@@ -13,7 +13,8 @@ export type AccountType =
   | 'Futures'
   | 'Jago'
   | 'Gopay'
-  | 'Reksadana';
+  | 'Reksadana'
+  | 'Shopeepay';
 
 export interface Transaction {
   id: string;
@@ -30,6 +31,9 @@ export interface Transaction {
 }
 
 export interface TransactionWithBalance extends Transaction {
+  is_hidden?: boolean;
+  /** Dicatat saat offline / belum tersinkron ke server. */
+  is_pending?: boolean;
   running_balance: number;
 }
 
@@ -61,7 +65,7 @@ export interface TransferFormData {
   notes: string;
 }
 
-export const EXPENSE_CATEGORIES: ExpenseCategory[] = ['Foods', 'Transportation', 'Equipment', 'Entertainment'];
+export const EXPENSE_CATEGORIES: ExpenseCategory[] = ['Foods', 'Transportation', 'Equipment', 'Entertainment', 'Running'];
 export const INCOME_CATEGORIES: IncomeCategory[] = ['Salary', 'Etc'];
 export const INVESTED_ACCOUNT_TYPES: AccountType[] = ['Crypto', 'Saham', 'Futures', 'Jago', 'Reksadana'];
 export const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
@@ -74,4 +78,5 @@ export const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
   { value: 'Jago', label: 'Jago' },
   { value: 'Gopay', label: 'Gopay' },
   { value: 'Reksadana', label: 'Reksadana' },
+  { value: 'Shopeepay', label: 'ShopeePay' },
 ];

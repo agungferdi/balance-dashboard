@@ -1,6 +1,7 @@
 import React from 'react';
 import { Wallet, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import NotificationSettings from './NotificationSettings';
 
 const Header: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -18,13 +19,16 @@ const Header: React.FC = () => {
               <p className="text-xs text-gray-400 dark:text-gray-500">Track your money smartly</p>
             </div>
           </div>
-          <button
-            onClick={toggleTheme}
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400"
-            title={isDark ? 'Light Mode' : 'Dark Mode'}
-          >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationSettings />
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400"
+              title={isDark ? 'Light Mode' : 'Dark Mode'}
+            >
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          </div>
         </div>
       </div>
     </header>
