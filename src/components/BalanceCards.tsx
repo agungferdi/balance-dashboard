@@ -21,8 +21,8 @@ const getAccountBalance = (accountBalances: BalancePerAccount[], type: AccountTy
   return accountBalances.find(a => a.account_type === type)?.balance || 0;
 };
 
-const CORE_ACCOUNT_TYPES: AccountType[] = ['rekening', 'dana', 'pocket'];
-const EXTRA_ACCOUNT_TYPES: AccountType[] = ['Saham', 'Crypto', 'Futures', 'Jago', 'Gopay', 'Shopeepay', 'Reksadana'];
+const CORE_ACCOUNT_TYPES: AccountType[] = ['rekening', 'pocket'];
+const EXTRA_ACCOUNT_TYPES: AccountType[] = ['dana', 'Saham', 'Crypto', 'Futures', 'Jago', 'Gopay', 'Shopeepay', 'Reksadana'];
 
 const getAccountStyle = (type: AccountType) => {
   switch (type) {
