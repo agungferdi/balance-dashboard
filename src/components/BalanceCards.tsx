@@ -129,7 +129,7 @@ const getAccountStyle = (type: AccountType) => {
 };
 
 const BalanceCards: React.FC<BalanceCardsProps> = ({ balance, loading, accountBalances }) => {
-  const [hideExtraAccounts, setHideExtraAccounts] = useState(false);
+  const [hideExtraAccounts, setHideExtraAccounts] = useState(true);
 
   if (loading) {
     return (
