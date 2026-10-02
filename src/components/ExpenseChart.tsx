@@ -11,6 +11,7 @@ import {
 import { TrendingUp, Utensils, Car, Wrench, Gamepad2, Footprints, MoreHorizontal } from 'lucide-react';
 import { TransactionWithBalance } from '../types/transaction';
 import { useTheme } from '../context/ThemeContext';
+import { toDateKey, fromDateKey } from '../lib/dateKey';
 
 interface ExpenseChartProps {
   transactions: TransactionWithBalance[];
@@ -87,7 +88,7 @@ const DetailTooltip = ({ active, payload, transactions, isDark, mode }: any) => 
     : 'bg-emerald-500/15 text-emerald-500 dark:text-emerald-400';
 
   const dayTransactions: TransactionWithBalance[] = dateKey
-    ? transactions.filter((t: TransactionWithBalance) => t.type === mode && t.created_at.startsWith(dateKey))
+    ? transactions.filter((t: TransactionWithBalance) => t.type === mode && toDateKey(new Date(t.created_at)) === dateKey)
     : [];
 
   return (
@@ -187,21 +188,19 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
     today.setHours(0, 0, 0, 0);
 
     for (let date = new Date(startDate); date <= today; date.setDate(date.getDate() + 1)) {
-      const dateKey = date.toISOString().split('T')[0];
-      dailyMap.set(dateKey, { expense: 0 });
+      dailyMap.set(toDateKey(date), { expense: 0 });
     }
     
     selectedModeTransactions.forEach((t) => {
-      const dateKey = new Date(t.created_at).toISOString().split('T')[0];
-      if (dailyMap.has(dateKey)) {
-        const current = dailyMap.get(dateKey)!;
-        current.expense += t.total;
+      const current = dailyMap.get(toDateKey(new Date(t.created_at)));
+      if (current) {
+        current.expense += Number(t.total);
       }
     });
     
     const data: DailyData[] = [];
     dailyMap.forEach((value, key) => {
-      const date = new Date(key);
+      const date = fromDateKey(key);
       data.push({
         date: new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(date),
         fullDate: new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date),
@@ -224,10 +223,10 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
   }, [chartData.length]);
 
   const totalAmountToday = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toDateKey(new Date());
     return transactions
-      .filter(t => t.type === selectedMode && t.created_at.startsWith(today))
-      .reduce((sum, t) => sum + t.total, 0);
+      .filter(t => t.type === selectedMode && toDateKey(new Date(t.created_at)) === today)
+      .reduce((sum, t) => sum + Number(t.total), 0);
   }, [transactions, selectedMode]);
 
   if (loading) {
