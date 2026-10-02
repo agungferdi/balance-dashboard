@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Plus, Minus, Send, Wallet, CreditCard, PiggyBank, Camera, Loader2, ScanLine, X } from 'lucide-react';
+import { Plus, Minus, Send, Wallet, CreditCard, PiggyBank, Camera, Upload, Loader2, ScanLine, X } from 'lucide-react';
 import { scanReceipt } from '../lib/receipt';
 import { notify } from '../lib/notifications';
 import {
@@ -60,7 +60,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
   const [scanCandidates, setScanCandidates] = useState<number[]>([]);
   const [scanRawText, setScanRawText] = useState('');
   const [showRawText, setShowRawText] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   const clearScan = () => {
     setScanMessage(null);
@@ -169,32 +170,47 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Receipt Scan */}
         <div>
+          {/* Kamera langsung (HP) dan unggah dari galeri/file dipisah: capture memaksa kamera. */}
           <input
-            ref={fileInputRef}
+            ref={cameraInputRef}
             type="file"
             accept="image/*"
             capture="environment"
             onChange={handleReceiptSelected}
             className="hidden"
           />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={scanning}
-            className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 border-2 border-dashed border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 disabled:opacity-60 transition-all"
-          >
-            {scanning ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                {scanStatus}... {scanProgress > 0 ? `${Math.round(scanProgress * 100)}%` : ''}
-              </>
-            ) : (
-              <>
+          <input
+            ref={uploadInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleReceiptSelected}
+            className="hidden"
+          />
+          {scanning ? (
+            <div className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 border-2 border-dashed border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5">
+              <Loader2 size={16} className="animate-spin" />
+              {scanStatus}... {scanProgress > 0 ? `${Math.round(scanProgress * 100)}%` : ''}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 border-2 border-dashed border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all"
+              >
                 <Camera size={16} />
-                Scan Struk
-              </>
-            )}
-          </button>
+                Foto Struk
+              </button>
+              <button
+                type="button"
+                onClick={() => uploadInputRef.current?.click()}
+                className="py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 border-2 border-dashed border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-500/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all"
+              >
+                <Upload size={16} />
+                Upload Struk
+              </button>
+            </div>
+          )}
           {scanMessage && (
             <div
               className={`mt-2 px-3 py-2 rounded-lg text-xs flex items-start gap-2 ${
