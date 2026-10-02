@@ -55,8 +55,19 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
   const [quantity, setQuantity] = useState('1');
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
+  const [scanStatus, setScanStatus] = useState('');
   const [scanMessage, setScanMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  const [scanCandidates, setScanCandidates] = useState<number[]>([]);
+  const [scanRawText, setScanRawText] = useState('');
+  const [showRawText, setShowRawText] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const clearScan = () => {
+    setScanMessage(null);
+    setScanCandidates([]);
+    setScanRawText('');
+    setShowRawText(false);
+  };
 
   const handleReceiptSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,14 +76,23 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
 
     setScanning(true);
     setScanProgress(0);
-    setScanMessage(null);
+    setScanStatus('Menyiapkan gambar');
+    clearScan();
     try {
       const result = await scanReceipt(file, (progress, status) => {
-        if (status === 'recognizing text') setScanProgress(progress);
+        setScanProgress(progress);
+        setScanStatus(status === 'recognizing text' ? 'Membaca teks' : 'Menyiapkan gambar');
       });
+      setScanRawText(result.rawText);
 
       if (!result.total) {
-        setScanMessage({ kind: 'error', text: 'Total tidak terbaca. Coba foto ulang lebih dekat & terang, atau isi manual.' });
+        setScanCandidates(result.candidates);
+        setScanMessage({
+          kind: 'error',
+          text: result.candidates.length
+            ? 'Total tidak terbaca otomatis. Pilih nominal yang benar di bawah, atau isi manual.'
+            : 'Total tidak terbaca. Coba foto ulang: struk lurus, terang, dan memenuhi frame. Atau isi manual.',
+        });
         notify('Scan struk gagal', 'Total tidak terbaca dari foto struk.', 'receipt');
         return;
       }
@@ -84,16 +104,29 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
       setNotes(result.merchant ? `${result.merchant} (struk)` : 'Struk');
 
       const summary = `${formatCurrency(result.total)}${result.merchant ? ` · ${result.merchant}` : ''}${result.category ? ` · ${result.category}` : ''}`;
-      setScanMessage({ kind: 'success', text: `Terbaca: ${summary}. Periksa lalu tekan Simpan.` });
+      setScanMessage({
+        kind: 'success',
+        text: `Terbaca: ${summary}. ${result.confident ? 'Cocok dengan tunai − kembali. ' : 'Mohon periksa angkanya. '}Lalu tekan Simpan.`,
+      });
+      if (!result.confident) setScanCandidates(result.candidates.filter((c) => c !== result.total));
       notify('Struk berhasil dibaca', summary, 'receipt');
     } catch (error) {
       console.error('Receipt scan failed:', error);
+      const detail = error instanceof Error ? error.message : String(error);
       const offlineHint = navigator.onLine ? '' : ' Saat offline, scan hanya bisa dipakai jika engine OCR sudah pernah diunduh.';
-      setScanMessage({ kind: 'error', text: `Gagal memproses struk.${offlineHint}` });
+      setScanMessage({ kind: 'error', text: `Gagal memproses struk (${detail}).${offlineHint}` });
       notify('Scan struk gagal', 'Struk tidak bisa diproses.', 'receipt');
     } finally {
       setScanning(false);
     }
+  };
+
+  const pickCandidate = (amount: number) => {
+    setType('expense');
+    setPrice(String(amount));
+    setQuantity('1');
+    setScanMessage({ kind: 'success', text: `Total diset ke ${formatCurrency(amount)}. Periksa lalu tekan Simpan.` });
+    setScanCandidates([]);
   };
 
   const getBalance = (accountType: AccountType): number => {
@@ -118,7 +151,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
     }
 
     await onSubmit(formData);
-    setScanMessage(null);
+    clearScan();
     setNotes('');
     setPrice('');
     setQuantity('1');
@@ -153,7 +186,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
             {scanning ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                Membaca struk... {scanProgress > 0 ? `${Math.round(scanProgress * 100)}%` : ''}
+                {scanStatus}... {scanProgress > 0 ? `${Math.round(scanProgress * 100)}%` : ''}
               </>
             ) : (
               <>
@@ -172,9 +205,39 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
             >
               <ScanLine size={14} className="mt-0.5 shrink-0" />
               <span className="flex-1">{scanMessage.text}</span>
-              <button type="button" onClick={() => setScanMessage(null)} className="shrink-0 opacity-60 hover:opacity-100">
+              <button type="button" onClick={clearScan} className="shrink-0 opacity-60 hover:opacity-100">
                 <X size={12} />
               </button>
+            </div>
+          )}
+          {scanCandidates.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {scanCandidates.map((amount) => (
+                <button
+                  key={amount}
+                  type="button"
+                  onClick={() => pickCandidate(amount)}
+                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300 transition-all"
+                >
+                  {formatCurrency(amount)}
+                </button>
+              ))}
+            </div>
+          )}
+          {scanRawText && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => setShowRawText((prev) => !prev)}
+                className="text-[11px] text-gray-400 dark:text-gray-500 underline"
+              >
+                {showRawText ? 'Sembunyikan teks hasil scan' : 'Lihat teks hasil scan'}
+              </button>
+              {showRawText && (
+                <pre className="mt-1 max-h-40 overflow-auto p-2 rounded-lg bg-gray-50 dark:bg-white/5 text-[10px] leading-tight text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                  {scanRawText}
+                </pre>
+              )}
             </div>
           )}
         </div>
