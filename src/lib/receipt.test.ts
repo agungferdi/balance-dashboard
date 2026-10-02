@@ -1,4 +1,4 @@
-import { parseAmount, parseReceiptText } from './receipt';
+import { parseAmount, parseReceiptText, mergeResults } from './receipt';
 
 describe('parseAmount', () => {
   it.each([
@@ -56,5 +56,42 @@ Nasi ayam 18.000
 Es teh 5.000
 23.000`;
     expect(parseReceiptText(text).total).toBe(23000);
+  });
+});
+
+describe('cash − change cross-check', () => {
+  it('flags a total that matches tunai − kembali as confident', () => {
+    const r = parseReceiptText(`INDOMARET\nTOTAL BELANJA 50.000\nTUNAI 100.000\nKEMBALI 50.000`);
+    expect(r.total).toBe(50000);
+    expect(r.confident).toBe(true);
+  });
+
+  it('derives the total from tunai − kembali when no total keyword is readable', () => {
+    const r = parseReceiptText(`WARUNG\nNasi ayam 20.000\nEs teh 5.000\nTUNAI 50.000\nKEMBALI 25.000`);
+    expect(r.total).toBe(25000);
+  });
+
+  it('exposes the biggest amounts as manual candidates', () => {
+    const r = parseReceiptText(`WARUNG\nNasi 20.000\nEs teh 5.000\nTUNAI 50.000`);
+    expect(r.candidates).toEqual([50000, 20000, 5000]);
+  });
+});
+
+describe('mergeResults', () => {
+  const result = (total: number | null, confidence: number, confident = false) => ({
+    data: { total, merchant: null, category: null, rawText: '', confident, candidates: [] as number[] },
+    confidence,
+  });
+
+  it('prefers the total most passes agree on', () => {
+    expect(mergeResults([result(63805, 80), result(83805, 50), result(83805, 40)]).total).toBe(83805);
+  });
+
+  it('breaks ties by OCR confidence', () => {
+    expect(mergeResults([result(100, 30), result(200, 90)]).total).toBe(200);
+  });
+
+  it('returns null total when nothing was read', () => {
+    expect(mergeResults([result(null, 10)]).total).toBeNull();
   });
 });
