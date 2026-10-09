@@ -21,18 +21,19 @@ interface TransactionFormProps {
 
 const PAYMENT_SOURCES: { value: AccountType; label: string }[] = [
   { value: 'rekening', label: 'Rekening' },
-  { value: 'dana', label: 'Dana' },
+  { value: 'Gopay', label: 'Gopay' },
+  { value: 'Shopeepay', label: 'ShopeePay' },
   { value: 'pocket', label: 'Pocket' },
 ];
 
 const getAccountIcon = (accountType: AccountType) => {
   switch (accountType) {
     case 'rekening':
-      return <Wallet size={14} />;
+      return <Wallet size={12} />;
     case 'pocket':
-      return <PiggyBank size={14} />;
+      return <PiggyBank size={12} />;
     default:
-      return <CreditCard size={14} />;
+      return <CreditCard size={12} />;
   }
 };
 
@@ -313,21 +314,21 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
         {/* Payment Source (only for expenses) */}
         {type === 'expense' && (
           <div>
-            <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Bayar Dari</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <label className="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1.5">Bayar Dari</label>
+            <div className="grid grid-cols-4 gap-1.5">
               {PAYMENT_SOURCES.map((source) => (
                 <button
                   key={source.value}
                   type="button"
                   onClick={() => setPaymentSource(source.value)}
-                  className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl text-xs font-semibold transition-all duration-200
+                  className={`flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg text-[11px] font-semibold min-w-0 transition-all duration-200
                     ${paymentSource === source.value
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20'
                       : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10'}`}
                 >
                   {getAccountIcon(source.value)}
-                  <span>{source.label}</span>
-                  <span className={`text-[10px] ${paymentSource === source.value ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
+                  <span className="truncate max-w-full">{source.label}</span>
+                  <span className={`text-[9px] truncate max-w-full ${paymentSource === source.value ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
                     {formatCurrency(getBalance(source.value))}
                   </span>
                 </button>
