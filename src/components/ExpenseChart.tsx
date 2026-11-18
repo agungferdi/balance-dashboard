@@ -296,7 +296,8 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
       </div>
 
       <div className="h-40">
-        <ResponsiveContainer width="100%" height="100%">
+        {/* debounce: keyboard HP membuka dengan mengubah ukuran viewport; jangan gambar ulang grafik di tiap langkahnya. */}
+        <ResponsiveContainer width="100%" height="100%" debounce={200}>
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <defs>
               <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
@@ -327,6 +328,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ transactions, loading }) =>
                 name={modeConfig.title}
                 stroke={modeConfig.stroke}
               strokeWidth={2}
+              isAnimationActive={false}
               fill="url(#expenseGradient)"
                 dot={{ fill: modeConfig.stroke, strokeWidth: 0, r: 3 }}
               activeDot={{ r: 5, stroke: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.2)', strokeWidth: 2 }}
