@@ -37,14 +37,15 @@ const getAccountIcon = (accountType: AccountType) => {
   }
 };
 
-const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
+// Dibuat sekali: membuat Intl.NumberFormat itu mahal, dan form ini re-render di setiap ketukan keyboard.
+const currencyFormatter = new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
+const formatCurrency = (amount: number): string => currencyFormatter.format(amount);
 
 const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, accountBalances }) => {
   const [type, setType] = useState<TransactionType>('expense');
@@ -292,7 +293,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
             <select
               value={expenseCategory}
               onChange={(e) => setExpenseCategory(e.target.value as ExpenseCategory)}
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-all"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-xl text-base sm:text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-colors"
             >
               {EXPENSE_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat} className="bg-white dark:bg-[#1a1a24] text-gray-700 dark:text-gray-200">{cat}</option>
@@ -302,7 +303,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
             <select
               value={incomeCategory}
               onChange={(e) => setIncomeCategory(e.target.value as IncomeCategory)}
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-all"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-xl text-base sm:text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-colors"
             >
               {INCOME_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat} className="bg-white dark:bg-[#1a1a24] text-gray-700 dark:text-gray-200">{cat}</option>
@@ -345,7 +346,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Contoh: Makan siang, Gaji"
-            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-xl text-base sm:text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-600"
           />
         </div>
 
@@ -360,7 +361,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
               placeholder="0"
               required
               min="1"
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-xl text-base sm:text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-600"
             />
           </div>
           <div>
@@ -371,7 +372,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSubmit, loading, ac
               onChange={(e) => setQuantity(e.target.value)}
               min="1"
               required
-              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-all text-center"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-xl text-base sm:text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:border-indigo-500 transition-colors text-center"
             />
           </div>
         </div>
